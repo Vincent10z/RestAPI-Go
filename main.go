@@ -70,15 +70,24 @@ func toggleTodoStatus(context *gin.Context) {
 
 
 }
-func deleteTodoByID(id string) error {
+func deleteTodoByID(context *gin.Context) {
+	id := context.Param("id")
+	_, err := getTodoByID(id)
+	if err != nil {
+		context.JSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
+		return
+	}
+
 	for i, t := range todos {
 		if t.ID == id {
 			todos = append(todos[:i], todos[i+1:]...)
-			return nil
+			break
 		}
 	}
-	return errors.New("Todo not found")
+
+	context.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 }
+
 
 func main() {
 	router := gin.Default()
