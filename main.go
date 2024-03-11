@@ -3,14 +3,35 @@ package main
 import (
 	"errors"
 	"net/http"
-
+	"context"
 	"github.com/gin-gonic/gin"
+)
+
+import (
+	"log"
+	"go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/bson/primitive"
+    "go.mongodb.org/mongo-driver/bson"
+
 )
 
 type todo struct {
 	ID        string `json:"id"`
 	Item      string `json:"item"`
 	Completed bool   `json:"completed"`
+}
+
+var todosCollection *mongo.Collection
+
+func connectDB() *mongo.Collection {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(context.Background(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collection := client.Database("todo").Collection("todos")
+	return collection
 }
 
 var todos = []todo{
@@ -115,6 +136,8 @@ func deleteTodoByID(context *gin.Context) {
 
 
 func main() {
+	todosCollection = connectDB()
+
 	router := gin.Default()
 	router.GET("/todos", getTodos)
 	router.GET("/todos/:id", getTodo)
